@@ -4,6 +4,13 @@ pipeline {
     options {
         timestamps()
     }
+
+    parameters {
+        choice(name: 'ENTORNO', choices: ['dev', 'qa',  'prod'], description: 'Ambiente destino'),
+        string(name: 'VERSION', defaultValue: '1.0.0', description: 'Versión a desplegar'),
+        booleanParam(name: 'EJECUTAR_TESTS', defaultValue: true, description: 'Correr los test')
+
+    }
  
     stages {
         stage('Instalar dependencias') {
@@ -26,10 +33,31 @@ pipeline {
         }
  
         stage('Test') {
+            when (
+                expression { params.EJECUTAR_TESTS }
+            )
             steps {
                 sh '''
                     . .venv/bin/activate
                     pytest --junitxml=reports/junit.xml
+                '''
+            }
+        }
+
+        stage('Aprobación') {
+            when (
+                expression { params.ENTORNO == 'prod' }
+            )
+            steps {
+                input message: '¿Desea desplegar en producción?', ok: 'Desplegar'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo "Desplegando versión ${VERSION} en el entorno ${ENTORNO}"
+                sh '''
+                    echo "Desplegando versión ${VERSION} en el entorno ${ENTORNO}"
                 '''
             }
         }
