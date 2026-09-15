@@ -55,7 +55,6 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                echo "Desplegando versión ${VERSION} en el entorno ${ENTORNO}"
                 sh '''
                     echo "Desplegando versión ${VERSION} en el entorno ${ENTORNO}"
                 '''
