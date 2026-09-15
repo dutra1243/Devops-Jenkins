@@ -4,12 +4,11 @@ pipeline {
     options {
         timestamps()
     }
-
+ 
     parameters {
-        choice(name: 'ENTORNO', choices: ['dev', 'qa',  'prod'], description: 'Ambiente destino')
-        string(name: 'VERSION', defaultValue: '1.0.0', description: 'Versión a desplegar')
-        booleanParam(name: 'EJECUTAR_TESTS', defaultValue: true, description: 'Correr los test')
-
+        choice(name: 'ENTORNO', choices: ['dev', 'qa', 'prod'], description: 'Ambiente destino')
+        string(name: 'VERSION', defaultValue: '1.0.0', description: 'Version a desplegar')
+        booleanParam(name: 'EJECUTAR_TESTS', defaultValue: true, description: 'Correr los tests')
     }
  
     stages {
@@ -33,9 +32,9 @@ pipeline {
         }
  
         stage('Test') {
-            when (
+            when {
                 expression { params.EJECUTAR_TESTS }
-            )
+            }
             steps {
                 sh '''
                     . .venv/bin/activate
@@ -43,28 +42,27 @@ pipeline {
                 '''
             }
         }
-
-        stage('Aprobación') {
-            when (
+ 
+        stage('Aprobacion') {
+            when {
                 expression { params.ENTORNO == 'prod' }
-            )
+            }
             steps {
-                input message: '¿Desea desplegar en producción?', ok: 'Desplegar'
+                input message: "Desplegar la version ${params.VERSION} a PRODUCCION?", ok: 'Si, desplegar'
             }
         }
-
+ 
         stage('Deploy') {
             steps {
-                sh '''
-                    echo "Desplegando versión ${VERSION} en el entorno ${ENTORNO}"
-                '''
+                echo "Desplegando ${params.VERSION} al ambiente ${params.ENTORNO}"
+                sh 'echo "Entorno desde el shell: $ENTORNO, version $VERSION"'
             }
         }
     }
  
     post {
         always {
-            junit 'reports/junit.xml'
+            junit allowEmptyResults: true, testResults: 'reports/junit.xml'
         }
     }
 }
